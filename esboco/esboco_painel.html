@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de Demandas — esboço</title>
+<style>
+:root{
+  --roxo:#5E22F3; --roxo-esc:#3D1A9E; --lavanda:#EDE8FB; --card:#F7F4FE; --borda:#E4DAFB;
+  --tinta:#1A1A2E; --tinta2:#55556A; --muda:#8A8A9A; --bg:#FFFFFF; --grade:#ECEAF2;
+  --ok:#1E8E5A; --atraso:#C4314B; --semana:#B86E00; --prazo:#5E22F3; --semprazo:#8A8A9A;
+  --st-concl:#3D1A9E; --st-and:#8B62F7; --st-ini:#C9B8FB; --st-sem:#D9D9E0;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --lavanda:#2A2146; --card:#1F1A33; --borda:#3A2F5E; --tinta:#ECEAF6; --tinta2:#B5B0CC; --muda:#8D88A6;
+  --bg:#141221; --grade:#2A2640; --roxo-esc:#C9B8FB; --ok:#4CC38A; --atraso:#F0697F; --semana:#E6A23C;
+  --prazo:#A788FA; --st-concl:#C9B8FB; --st-and:#8B62F7; --st-ini:#4E3B8F; --st-sem:#3A3850;}}
+:root[data-theme="dark"]{
+  --lavanda:#2A2146; --card:#1F1A33; --borda:#3A2F5E; --tinta:#ECEAF6; --tinta2:#B5B0CC; --muda:#8D88A6;
+  --bg:#141221; --grade:#2A2640; --roxo-esc:#C9B8FB; --ok:#4CC38A; --atraso:#F0697F; --semana:#E6A23C;
+  --prazo:#A788FA; --st-concl:#C9B8FB; --st-and:#8B62F7; --st-ini:#4E3B8F; --st-sem:#3A3850;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tinta);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--borda);padding-bottom:12px}
+header img{height:30px}
+h1{font-size:22px;margin:0;color:var(--roxo-esc)}
+h2{font-size:17px;color:var(--roxo-esc);margin:22px 0 8px}
+h3{font-size:14px;margin:0 0 6px;color:var(--roxo-esc)}
+.sub{color:var(--tinta2);font-size:13px}
+.esboco{margin-left:auto;background:var(--lavanda);color:var(--roxo-esc);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600}
+.upload{margin:14px 0;border:1px dashed var(--roxo);border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--card)}
+.upload b{color:var(--roxo-esc)}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid currentColor}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--borda);overflow-x:auto;margin-top:6px}
+.tab{background:none;border:0;padding:9px 12px;font:600 14px "Segoe UI",sans-serif;color:var(--tinta2);cursor:pointer;border-radius:8px 8px 0 0;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--roxo);box-shadow:inset 0 -3px 0 var(--roxo)}
+.painel{display:none;padding-top:8px}.painel.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--borda);border-radius:10px;padding:12px 14px}
+.kpi label{color:var(--roxo);font-size:12.5px;font-weight:600;display:block}
+.kpi .v{font-size:28px;font-weight:700;color:var(--tinta);font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--tinta2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.box{border:1px solid var(--borda);border-radius:10px;padding:14px;background:var(--bg)}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tinta2);margin:4px 0 10px}
+.legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.linha{display:grid;grid-template-columns:170px 1fr 52px;gap:10px;align-items:center;margin:8px 0}
+.linha .nome{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linha .num{text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:var(--tinta2)}
+.barra{display:flex;height:14px;gap:2px}
+.barra span{display:block;height:100%;min-width:0}
+.barra span:first-child{border-radius:4px 0 0 4px}.barra span:last-child{border-radius:0 4px 4px 0}
+.barra span:only-child{border-radius:4px}
+.trilho{height:10px;background:var(--grade);border-radius:4px;overflow:hidden}
+.trilho b{display:block;height:100%;background:var(--roxo);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--tinta2);font-weight:600;border-bottom:1px solid var(--borda);padding:6px 8px;font-size:12px}
+td{border-bottom:1px solid var(--grade);padding:6px 8px;vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.entrega{border:1px solid var(--borda);border-radius:10px;margin:10px 0;overflow-x:auto}
+.box,.semana{overflow-x:auto}
+td{min-width:70px}
+.entrega summary{display:grid;grid-template-columns:28px 1fr 160px 120px;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;background:var(--card);list-style:none}
+.entrega summary::-webkit-details-marker{display:none}
+@media(max-width:700px){.entrega summary{grid-template-columns:28px 1fr;}.entrega summary .hide-m{display:none}}
+.farol{font-size:18px;text-align:center}
+.bul{margin:0;padding-left:18px}.bul li{margin:5px 0}
+.nota{background:var(--lavanda);border-radius:10px;padding:10px 14px;color:var(--tinta);font-size:13px;margin:10px 0}
+#tip{position:fixed;pointer-events:none;background:var(--tinta);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;display:none;z-index:9;max-width:280px}
+select{font:inherit;padding:5px 8px;border-radius:6px;border:1px solid var(--borda);background:var(--bg);color:var(--tinta)}
+.filtros{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.semana{border-left:4px solid var(--roxo);padding:4px 0 4px 12px;margin:14px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="data:image/png;base64,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" alt="Motiva">
+  <div><h1>Gestão de Demandas — NTec</h1><div class="sub">Avaliando: <b>Gestão 4.0 — NTec</b> · posição em <span id="hoje"></span></div></div>
+  <span class="esboco">ESBOÇO · dados reais da planilha</span>
+</header>
+
+<div class="upload">📥 <span><b>Importar planilha de demandas</b> (.xlsx no formato atual, uma aba por frente)</span>
+  <span class="chip" style="color:var(--ok)">✔ Gestão 4.0 - NTec.xlsx</span>
+  <span class="sub" id="resumoImport"></span>
+</div>
+
+<div class="filtros"><label class="sub">Frente:</label><select id="fFrente"></select>
+  <label class="sub">Responsável:</label><select id="fResp"></select></div>
+
+<div class="tabs" role="tablist">
+  <button class="tab" aria-selected="true" data-p="geral">📊 Visão geral</button>
+  <button class="tab" data-p="frentes">🗂️ Frentes e entregas</button>
+  <button class="tab" data-p="resp">👥 Responsáveis</button>
+  <button class="tab" data-p="prazos">📅 Prazos</button>
+  <button class="tab" data-p="pauta">📝 Pauta semanal</button>
+  <button class="tab" data-p="qual">🔎 Qualidade dos dados</button>
+  <button class="tab" data-p="exp">📑 Exportar</button>
+</div>
+
+<section class="painel on" id="geral">
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="box"><h3>Status das ações por frente</h3>
+      <div class="legenda" id="legStatus"></div><div id="barFrentes"></div></div>
+    <div class="box"><h3>Avanço ponderado por frente</h3>
+      <div class="sub" style="margin-bottom:8px">Σ(peso × %) ÷ Σ peso — mesma conta da planilha</div><div id="avFrentes"></div></div>
+  </div>
+  <h2>⚠️ Pontos de atenção (gerados automaticamente)</h2>
+  <div class="box"><ul class="bul" id="atencao"></ul></div>
+</section>
+
+<section class="painel" id="frentes">
+  <div class="legenda" id="legSinal"></div>
+  <div id="listaFrentes"></div>
+</section>
+
+<section class="painel" id="resp">
+  <div class="nota">Carga por pessoa = ações em aberto. Peso em aberto soma o peso (1–3) das ações não concluídas. Áreas de apoio (Facilities, Frotas, Unidade) aparecem separadas como <b>dependência externa</b>.</div>
+  <div class="box"><table id="tabResp"></table></div>
+</section>
+
+<section class="painel" id="prazos"><div id="listaPrazos"></div></section>
+
+<section class="painel" id="pauta">
+  <div class="nota">Roteiro pronto para a reunião semanal de acompanhamento — sai também no PowerPoint.</div>
+  <div id="pautaConteudo"></div>
+</section>
+
+<section class="painel" id="qual">
+  <div class="nota">O app aceita a planilha como está, mas aponta o que impede um indicador confiável. Quanto menos itens aqui, melhor a gestão.</div>
+  <div id="qualConteudo"></div>
+</section>
+
+<section class="painel" id="exp">
+  <div class="grid2">
+    <div class="box"><h3>📑 Relatório executivo (PowerPoint)</h3><ul class="bul">
+      <li>Capa Motiva + posição da semana</li><li>Painel geral (KPIs + avanço por frente)</li>
+      <li>1 slide por frente: entregas com farol e pontos de atenção</li><li>Pauta: concluído, atrasado, próxima semana, impedimentos</li></ul></div>
+    <div class="box"><h3>🧮 Base consolidada (Excel)</h3><ul class="bul">
+      <li>Todas as ações numa tabela única (frente, entrega, ação, responsável, status, peso, prazo, sinal)</li>
+      <li>Aba de pendências de qualidade de dados</li><li>Pronta para filtro dinâmico ou Power BI</li></ul></div>
+  </div>
+</section>
+</div>
+<div id="tip"></div>
+
+<script>
+const DADOS = {"hoje": "2026-10-19", "itens": [{"frente": "Fábrica de Placas", "entrega": "Reposições", "subgrupo": null, "acao": "Contratação Assistente Motorista / Ernani", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-08", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reposições", "subgrupo": null, "acao": "Desligamento Eduardo", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": "2026-10-02", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reposições", "subgrupo": null, "acao": "Desligamento David", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": "2026-10-16", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reposições", "subgrupo": null, "acao": "Transferência Robinson", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-15", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reposições", "subgrupo": null, "acao": "Contratação Supervisor(a)", "responsavel": "Carol", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": "2026-10-23", "sinal": "vence_semana", "aguardando": false, "comentario": "Entrevistas agendadas", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Treinamentos", "subgrupo": null, "acao": "RioSP - Produção Interna", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "Luiz agendar visita Sabrina na RioSP e depois agendar Ale vir no HubSP", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Treinamentos", "subgrupo": null, "acao": "3M - Metodologia e Qualidade", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 2, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": true, "comentario": "Luiz agendará. Aguardando data de agendamento.", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Treinamentos", "subgrupo": null, "acao": "Supli Net - Impressoras (Manut. / Utilização)", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": true, "comentario": "Fazer requisição do treinamento e acionar", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Treinamentos", "subgrupo": null, "acao": "Avery - Plotter de Recorte", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 2, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": true, "comentario": "Luiz agendará. Aguardando data de agendamento.", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Alteração de Descrição de cargo", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 3, "pct": 1, "data": "2026-07-20", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Contratação de Assistente com CNH C", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-08", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Treinamentos/habilitação Motiva", "responsavel": "Ernani", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": "2026-10-09", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Treinamento Frotas para operar Plataforma", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-16", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Cartão de abastecimento / chamado", "responsavel": "Havila Raquel", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-14", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "Manutenção Caminhão", "responsavel": "Frotas", "externo": true, "multi": false, "status": "Concluído", "peso": 3, "pct": 1, "data": "2026-10-09", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Retomada Entregas Placas", "subgrupo": null, "acao": "E-mail comunicando retomada", "responsavel": "Carol", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": "2026-10-15", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Ar-Condicionado", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Compressores", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Portão de entrada interno", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 2, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Porta do banheiro", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Filtro de Água vencido", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Carpete das mesas de produção", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Em análise", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Manutenção Predial", "subgrupo": null, "acao": "Armários - manutenção chaves", "responsavel": "Facilities", "externo": true, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": true, "comentario": "Abertura chamado Facilities\n2557789", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reforma Predial", "subgrupo": null, "acao": "Custos não foram inclusos em PQQ", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Reforma Predial", "subgrupo": null, "acao": "Não considerada em PQQ. Existe uma forma de acrescentar no PQQ? Existe outro caminho para fazer melhorias?", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 2, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Serralheria", "subgrupo": null, "acao": "Regularização dos serviços de corte", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Serralheria", "subgrupo": null, "acao": "Avaliação com time Backoffice para aditivar um Serralheiro através de contratos terceiros", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-16", "sinal": "atrasada", "aguardando": true, "comentario": "Em análise", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Serralheria", "subgrupo": null, "acao": "Avaliação com time Backoffice para elaborar um novo contrato terceirizado para Serralheiro", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-16", "sinal": "atrasada", "aguardando": true, "comentario": "Em análise", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Placa Pro - Licença vinculada TI", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-07", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Flexi Print - Licença vinculada TI", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-07", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Corel Draw - Licença vinculada TI", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-07", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Production Manager - Licença vinculada TI", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-07", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Power Automate - Vinculado ao Lucas", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "Transferência da licença para grupo", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Treinamento motiva para utilização Power Automate", "responsavel": "Lucas, Luiz e Carol", "externo": false, "multi": true, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "Lucas - Concluído\nLuiz - Pendente\nCarol - Pendente", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Criação da conta de serviço", "responsavel": "Luiz Antonio", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": true, "comentario": "Chamado aberto", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Forms 1.0 - Vinculado ao Lucas", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-15", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Manutenção Impressoras - Care Pack", "responsavel": "Carol", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": true, "comentario": "Abertura de Pedido \npor área", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Regularização Softwares / Equipamentos", "subgrupo": null, "acao": "Plotter de Recorte - Manutenção sensor", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": true, "comentario": "Aguardando retorno Avery", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Estoque", "acao": "Determinação de Estoque Padrão / Revisão", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-14", "sinal": "atrasada", "aguardando": false, "comentario": "Levantamento do histórico de solicitações ao HubSP", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Estoque", "acao": "Catalogar placas prontas", "responsavel": "Ernani", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-13", "sinal": "atrasada", "aguardando": false, "comentario": "Em levantamento", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Estoque", "acao": "Plano de Ataque produção estoque faltante", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Estoque", "acao": "Plano de sustenção de estoque", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Sem status", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Unidades enviar informações", "acao": "AutoBan - 20% pendente", "responsavel": "Unidade", "externo": true, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "", "nota": "Cenário 16/10"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Unidades enviar informações", "acao": "SPVias - 80% pendente", "responsavel": "Unidade", "externo": true, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "", "nota": "Total 98 pedidos"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Unidades enviar informações", "acao": "Rodoanel - 20% pendente", "responsavel": "Unidade", "externo": true, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "", "nota": "9 em andamento"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Unidades enviar informações", "acao": "Sorocabana - 0% pendente", "responsavel": "Unidade", "externo": true, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-09", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": "4 à ser cancelada"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Execução", "acao": "Diagramação das placas", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Concluído", "peso": 3, "pct": 1, "data": "2026-10-16", "sinal": "concluida", "aguardando": false, "comentario": "Concluído", "nota": "1 delineador grama"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Execução", "acao": "Verificação de apoio demais fábricas", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-19", "sinal": "vence_semana", "aguardando": false, "comentario": "", "nota": "44 Confecção HubSP"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Execução", "acao": "Plano de Impressão - HubSP", "responsavel": "Sabrina", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": false, "comentario": "", "nota": "26 diagramaticas/apoio"}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Execução", "acao": "Planejamento de atendimento/entrega", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "Plano de Ação - Produção", "subgrupo": "Execução", "acao": "14 Placas SPVias sem informação", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "AQUISIÇÕES", "subgrupo": null, "acao": "EPIs - Botina", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": "2026-10-29", "sinal": "no_prazo", "aguardando": true, "comentario": "à receber (de 6 a 15 dias úteis)", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "AQUISIÇÕES", "subgrupo": null, "acao": "Uniformes", "responsavel": "Luiz", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": true, "comentario": "abrir requisição", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "NOTA DE DÉBITO E CONTA CORRENTE", "subgrupo": null, "acao": "Check entregas e demais verificações", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-15", "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "NOTA DE DÉBITO E CONTA CORRENTE", "subgrupo": null, "acao": "Finalização Notas de Débito", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": "2026-10-15", "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "NOTA DE DÉBITO E CONTA CORRENTE", "subgrupo": null, "acao": "Emissão Nota SAP", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Fábrica de Placas", "entrega": "NOTA DE DÉBITO E CONTA CORRENTE", "subgrupo": null, "acao": "Apresentação Conta Corrente - outubro/26", "responsavel": "Lucas", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": "2026-10-20", "sinal": "vence_semana", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Esquematização funcionamento Forms", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Elaboração Forms HubSP", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Elaboração Forms HubSul", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Elaboração Forms HubMinas", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Elaboração Forms HubRio", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - FORMS", "subgrupo": null, "acao": "Operação Assistida / Agendas semanais", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - DASH", "subgrupo": null, "acao": "Painel do Solicitante padrão Unidades", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 3, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - DASH", "subgrupo": null, "acao": "Painel do Solicitante individualizado", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - DASH", "subgrupo": null, "acao": "Automação e-mail solicitante (Power Automate)", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 1, "pct": 1, "data": null, "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - DASH", "subgrupo": null, "acao": "Operação Assistida / Agendas semanais", "responsavel": "Luiz", "externo": false, "multi": false, "status": "À iniciar", "peso": 3, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "PADRONIZAÇÃO CONTROLES - DASH", "subgrupo": null, "acao": "Conversa com Fábrica Paraná", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Em andamento", "peso": 1, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "KICK OFF CENTRALIZAÇÃO", "subgrupo": null, "acao": "Documento \"Passo a Passo\" para solicitação", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Concluído", "peso": 2, "pct": 1, "data": "2026-10-09", "sinal": "concluida", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "KICK OFF CENTRALIZAÇÃO", "subgrupo": null, "acao": "Treinamento Unidades", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": "2026-10-23", "sinal": "vence_semana", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "KICK OFF CENTRALIZAÇÃO", "subgrupo": null, "acao": "Envio e-mails formalizando transição", "responsavel": "Carol", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "à enviar Minas_SP\nPRVias (avaliar)", "nota": ""}, {"frente": "Centralização Fabricas", "entrega": "KICK OFF CENTRALIZAÇÃO", "subgrupo": null, "acao": "Elaboração controle de estoque placas Unidades", "responsavel": "Lucas", "externo": false, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": "2026-10-15", "sinal": "atrasada", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Projeto Pequi - Orçamento PN", "subgrupo": null, "acao": "Full Service | Pacote A | Pacote C", "responsavel": "Omar / Gabriel", "externo": false, "multi": true, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Projeto Pequi - Orçamento PN", "subgrupo": null, "acao": "Pacote B", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Projeto Pequi - Orçamento PN", "subgrupo": null, "acao": "Sinalização Horizontal", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Projeto Pequi - Orçamento PN", "subgrupo": null, "acao": "Sinalização Vertical", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Projeto Pequi - Orçamento PN", "subgrupo": null, "acao": "EPS - Manutenção", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Morro dos Cavalos - A iniciar", "subgrupo": null, "acao": "Full Service | Pacote A | Pacote C", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Morro dos Cavalos - A iniciar", "subgrupo": null, "acao": "Pacote B", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Morro dos Cavalos - A iniciar", "subgrupo": null, "acao": "Sinalização Horizontal", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Morro dos Cavalos - A iniciar", "subgrupo": null, "acao": "Sinalização Vertical", "responsavel": "", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Novos Negócios", "entrega": "Morro dos Cavalos - A iniciar", "subgrupo": null, "acao": "EPS - Manutenção", "responsavel": "Lucas", "externo": false, "multi": false, "status": "Sem status", "peso": null, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Verde", "entrega": "TAREFA PRINCIPAL", "subgrupo": null, "acao": "Internalização Pantanal", "responsavel": "Omar", "externo": false, "multi": false, "status": "Em andamento", "peso": 2, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Verde", "entrega": "TAREFA PRINCIPAL", "subgrupo": null, "acao": "TR 6 meses AB", "responsavel": "Omar", "externo": false, "multi": false, "status": "Em andamento", "peso": 3, "pct": 0.5, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}, {"frente": "Verde", "entrega": "TAREFA PRINCIPAL", "subgrupo": null, "acao": "Revisão TR Sorocabana", "responsavel": "Omar", "externo": false, "multi": false, "status": "À iniciar", "peso": 1, "pct": 0, "data": null, "sinal": "sem_prazo", "aguardando": false, "comentario": "", "nota": ""}]};
+const HOJE = new Date(DADOS.hoje+"T00:00:00");
+const fmt = d => d ? d.slice(8,10)+"/"+d.slice(5,7) : "—";
+const pct = v => Math.round(v*100)+"%";
+const STATUS = [["Concluído","--st-concl"],["Em andamento","--st-and"],["À iniciar","--st-ini"],["Sem status","--st-sem"]];
+const SINAL = {
+  atrasada:{ic:"⚠",t:"Atrasada",c:"--atraso"}, vence_semana:{ic:"⏰",t:"Vence em 7 dias",c:"--semana"},
+  no_prazo:{ic:"●",t:"No prazo",c:"--prazo"}, sem_prazo:{ic:"○",t:"Sem prazo",c:"--semprazo"},
+  concluida:{ic:"✔",t:"Concluída",c:"--ok"}};
+const chip = s => `<span class="chip" style="color:var(${SINAL[s].c})">${SINAL[s].ic} ${SINAL[s].t}</span>`;
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const avanco = it => { const p = it.filter(i=>i.peso); const s = p.reduce((a,i)=>a+i.peso,0); return s? p.reduce((a,i)=>a+i.peso*i.pct,0)/s : 0; };
+const agrupa = (arr,k) => arr.reduce((m,i)=>((m[i[k]]??=[]).push(i),m),{});
+function farol(it){
+  const ab = it.filter(i=>i.sinal!=="concluida");
+  if(!ab.length) return {ic:"✔",t:"Concluída",c:"--ok"};
+  if(ab.some(i=>i.sinal==="atrasada")) return {ic:"🔴",t:"Crítica: há ação atrasada",c:"--atraso"};
+  if(ab.some(i=>i.sinal==="vence_semana") || ab.filter(i=>i.sinal==="sem_prazo").length > ab.length/2) return {ic:"🟡",t:"Atenção",c:"--semana"};
+  return {ic:"🟢",t:"No prazo",c:"--ok"};
+}
+
+document.getElementById("hoje").textContent = HOJE.toLocaleDateString("pt-BR");
+const frentes = [...new Set(DADOS.itens.map(i=>i.frente))];
+const pessoas = [...new Set(DADOS.itens.map(i=>i.responsavel).filter(Boolean))].sort();
+fFrente.innerHTML = `<option value="">Todas</option>`+frentes.map(f=>`<option>${esc(f)}</option>`).join("");
+fResp.innerHTML = `<option value="">Todos</option>`+pessoas.map(f=>`<option>${esc(f)}</option>`).join("");
+resumoImport.textContent = `${DADOS.itens.length} ações lidas em ${frentes.length} frentes com conteúdo · abas Horizontal e Vertical só têm o modelo vazio`;
+
+const tip = document.getElementById("tip");
+document.addEventListener("mousemove",e=>{ const t=e.target.closest("[data-tip]");
+  if(!t){tip.style.display="none";return} tip.innerHTML=t.dataset.tip; tip.style.display="block";
+  tip.style.left=Math.min(e.clientX+12,innerWidth-290)+"px"; tip.style.top=(e.clientY+14)+"px"; });
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll(".painel").forEach(p=>p.classList.toggle("on",p.id===b.dataset.p)); });
+
+legStatus.innerHTML = STATUS.map(([n,c])=>`<span><i style="background:var(${c})"></i>${n}</span>`).join("");
+legSinal.innerHTML = Object.values(SINAL).map(s=>`<span class="chip" style="color:var(${s.c})">${s.ic} ${s.t}</span>`).join("");
+
+function render(){
+  const F = DADOS.itens.filter(i=>(!fFrente.value||i.frente===fFrente.value)&&(!fResp.value||i.responsavel===fResp.value));
+  const abertas = F.filter(i=>i.sinal!=="concluida");
+  const cnt = s => F.filter(i=>i.sinal===s).length;
+  const k = [
+    ["Avanço geral", pct(avanco(F)), "ponderado pelo peso"],
+    ["Ações", F.length, `${abertas.length} em aberto`],
+    ["✔ Concluídas", cnt("concluida"), pct(cnt("concluida")/(F.length||1))+" do total"],
+    ["⚠ Atrasadas", cnt("atrasada"), "prazo vencido, não concluídas"],
+    ["⏰ Vencem em 7 dias", cnt("vence_semana"), "até "+new Date(HOJE.getTime()+7*864e5).toLocaleDateString("pt-BR")],
+    ["○ Sem prazo", cnt("sem_prazo"), "não entram no farol de prazo"],
+    ["⏳ Aguardando terceiros", F.filter(i=>i.aguardando).length, "chamado, retorno, requisição"],
+  ];
+  kpis.innerHTML = k.map(([l,v,d])=>`<div class="kpi"><label>${l}</label><div class="v">${v}</div><div class="d">${d}</div></div>`).join("");
+
+  const gF = agrupa(F,"frente");
+  barFrentes.innerHTML = Object.entries(gF).map(([f,it])=>{
+    const segs = STATUS.map(([n,c])=>{const q=it.filter(i=>i.status===n).length; return q?`<span style="flex:${q};background:var(${c})" data-tip="<b>${esc(f)}</b><br>${n}: ${q} de ${it.length}"></span>`:""}).join("");
+    return `<div class="linha"><div class="nome" title="${esc(f)}">${esc(f)}</div><div class="barra">${segs}</div><div class="num">${it.length}</div></div>`;}).join("");
+  avFrentes.innerHTML = Object.entries(gF).map(([f,it])=>{const a=avanco(it);
+    return `<div class="linha"><div class="nome">${esc(f)}</div><div class="trilho" data-tip="<b>${esc(f)}</b><br>Avanço ponderado: ${pct(a)}"><b style="width:${a*100}%"></b></div><div class="num">${pct(a)}</div></div>`;}).join("");
+
+  // pontos de atencao
+  const pts = [];
+  const gE = agrupa(F.map(i=>({...i,chave:i.frente+" › "+i.entrega})),"chave");
+  Object.entries(gE).forEach(([e,it])=>{ const at=it.filter(i=>i.sinal==="atrasada");
+    if(at.length) pts.push([3,`<b>${esc(e)}</b>: ${at.length} ação(ões) atrasada(s) — ${at.map(i=>esc(i.acao)+" ("+fmt(i.data)+")").slice(0,3).join("; ")}${at.length>3?"…":""}`]);
+    if(it.every(i=>i.pct===0) && it.length>1) pts.push([2,`<b>${esc(e)}</b>: entrega com 0% de avanço (${it.length} ações à iniciar)`]); });
+  const ext = abertas.filter(i=>i.externo);
+  if(ext.length) pts.push([2,`${ext.length} ações em aberto dependem de áreas de apoio (${[...new Set(ext.map(i=>i.responsavel))].join(", ")}) — cobrar fora da equipe`]);
+  const ag = abertas.filter(i=>i.aguardando);
+  if(ag.length) pts.push([2,`${ag.length} ações paradas aguardando terceiros (chamado/retorno/requisição) — avaliar status <b>Impedido</b>`]);
+  const sp = abertas.filter(i=>i.sinal==="sem_prazo");
+  if(sp.length) pts.push([1,`${sp.length} ações em aberto sem data prevista — não dá para saber se estão atrasadas`]);
+  atencao.innerHTML = pts.sort((a,b)=>b[0]-a[0]).map(p=>`<li>${p[1]}</li>`).join("") || "<li>Nada crítico no filtro atual.</li>";
+
+  // frentes e entregas
+  listaFrentes.innerHTML = Object.entries(gF).map(([f,it])=>{
+    const ents = agrupa(it,"entrega");
+    return `<h2>${esc(f)} <span class="sub">· avanço ${pct(avanco(it))}</span></h2>`+Object.entries(ents).map(([e,acs])=>{
+      const fa = farol(acs); const prazo = acs.map(i=>i.data).filter(Boolean).sort().pop();
+      return `<details class="entrega"><summary><span class="farol" title="${fa.t}">${fa.ic}</span>
+        <span><b>${esc(e)}</b> <span class="sub">· ${acs.length} ações</span></span>
+        <span class="hide-m"><div class="trilho"><b style="width:${avanco(acs)*100}%"></b></div><span class="sub">${pct(avanco(acs))}</span></span>
+        <span class="hide-m sub">prazo final ${fmt(prazo)}</span></summary>
+        <table><tr><th>Ação</th><th>Responsável</th><th>Status</th><th>Peso</th><th>Prazo</th><th>Sinal</th><th>Último comentário</th></tr>
+        ${acs.map(i=>`<tr><td>${i.subgrupo?`<span class="sub">${esc(i.subgrupo)} › </span>`:""}${esc(i.acao)}</td><td>${esc(i.responsavel)||"<span class='sub'>—</span>"}</td>
+        <td>${esc(i.status)}</td><td class="n">${i.peso??"—"}</td><td>${fmt(i.data)}</td><td>${chip(i.sinal)}${i.aguardando?' <span class="chip" style="color:var(--semana)">⏳ aguardando</span>':""}</td>
+        <td class="sub">${esc(i.comentario)}</td></tr>`).join("")}</table></details>`}).join("")}).join("");
+
+  // responsaveis
+  const gR = agrupa(F.map(i=>({...i,r:i.responsavel||"(sem responsável)"})),"r");
+  const linhas = Object.entries(gR).map(([r,it])=>({r,ext:it[0].externo,tot:it.length,ab:it.filter(i=>i.sinal!=="concluida"),
+     at:it.filter(i=>i.sinal==="atrasada").length,peso:it.filter(i=>i.sinal!=="concluida").reduce((a,i)=>a+(i.peso||0),0),av:avanco(it)}))
+     .sort((a,b)=>a.ext-b.ext||b.peso-a.peso);
+  const maxP = Math.max(...linhas.map(l=>l.peso),1);
+  tabResp.innerHTML = `<tr><th>Responsável</th><th>Total</th><th>Em aberto</th><th>Atrasadas</th><th style="width:30%">Peso em aberto</th><th>Avanço</th></tr>`+
+    linhas.map(l=>`<tr><td>${esc(l.r)}${l.ext?' <span class="chip" style="color:var(--muda)">externo</span>':""}</td><td class="n">${l.tot}</td><td class="n">${l.ab.length}</td>
+    <td class="n">${l.at?`<span style="color:var(--atraso);font-weight:700">⚠ ${l.at}</span>`:"0"}</td>
+    <td><div class="trilho" data-tip="<b>${esc(l.r)}</b><br>Peso em aberto: ${l.peso}"><b style="width:${l.peso/maxP*100}%"></b></div></td><td class="n">${pct(l.av)}</td></tr>`).join("");
+
+  // prazos
+  const blocos = [["⚠ Atrasadas","atrasada"],["⏰ Vencem nos próximos 7 dias","vence_semana"],["● Mais adiante","no_prazo"],["○ Sem prazo definido","sem_prazo"]];
+  listaPrazos.innerHTML = blocos.map(([t,s])=>{const it=F.filter(i=>i.sinal===s).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+    return `<div class="semana" style="border-color:var(${SINAL[s].c})"><h3>${t} <span class="sub">(${it.length})</span></h3>
+    ${it.length?`<table><tr><th>Prazo</th><th>Ação</th><th>Frente › Entrega</th><th>Responsável</th><th>Status</th></tr>${it.map(i=>`<tr><td>${fmt(i.data)}</td><td>${esc(i.acao)}</td><td class="sub">${esc(i.frente)} › ${esc(i.entrega)}</td><td>${esc(i.responsavel)}</td><td>${esc(i.status)}</td></tr>`).join("")}</table>`:"<span class='sub'>Nenhuma.</span>"}</div>`}).join("");
+
+  // pauta
+  const semAnt = new Date(HOJE.getTime()-7*864e5).toISOString().slice(0,10);
+  const concSem = F.filter(i=>i.sinal==="concluida" && i.data && i.data>=semAnt);
+  const sec = (t,arr,f)=>`<h2>${t} <span class="sub">(${arr.length})</span></h2><div class="box"><ul class="bul">${arr.map(f).join("")||"<li class='sub'>Nada.</li>"}</ul></div>`;
+  pautaConteudo.innerHTML =
+    sec("1. ✔ Concluído na última semana",concSem,i=>`<li>${esc(i.acao)} — <span class="sub">${esc(i.responsavel)}, ${fmt(i.data)}</span></li>`)+
+    sec("2. ⚠ Atrasado — o que destrava?",F.filter(i=>i.sinal==="atrasada"),i=>`<li><b>${esc(i.acao)}</b> (${esc(i.responsavel)}, era ${fmt(i.data)}) — ${esc(i.comentario)||"<span class='sub'>sem comentário</span>"}</li>`)+
+    sec("3. ⏰ Compromissos da semana",F.filter(i=>i.sinal==="vence_semana"),i=>`<li>${esc(i.acao)} — <span class="sub">${esc(i.responsavel)}, ${fmt(i.data)}</span></li>`)+
+    sec("4. ⏳ Impedimentos / dependências",abertas.filter(i=>i.aguardando||i.externo),i=>`<li>${esc(i.acao)} — <span class="sub">${esc(i.responsavel)}: ${esc(i.comentario)}</span></li>`);
+
+  // qualidade
+  const q = [
+    ["Sem responsável", abertas.filter(i=>!i.responsavel)],
+    ["Sem data prevista (em aberto)", abertas.filter(i=>!i.data)],
+    ["Sem status", F.filter(i=>i.status==="Sem status")],
+    ["Sem peso", F.filter(i=>i.peso==null)],
+    ["Mais de um responsável na mesma ação", F.filter(i=>i.multi)],
+  ];
+  qualConteudo.innerHTML = q.map(([t,arr])=>`<details class="entrega"><summary style="grid-template-columns:1fr 80px"><span><b>${t}</b></span><span class="sub" style="text-align:right">${arr.length} ações</span></summary>
+    <table>${arr.map(i=>`<tr><td>${esc(i.acao)}</td><td class="sub">${esc(i.frente)} › ${esc(i.entrega)}</td></tr>`).join("")}</table></details>`).join("")+
+    `<div class="nota"><b>Também detectado na estrutura:</b> a coluna "Data Prevista/conclusão" mistura prazo e data de entrega (impede medir atraso real); entregas com data 12/01/2023 e erros #NUM!/#DIV/0! nas linhas-mãe; abas Horizontal e Vertical só com o modelo; anotações soltas na coluna "Avanço" (ex.: "Cenário 16/10 — Total 98 pedidos").</div>`;
+}
+fFrente.onchange = fResp.onchange = render;
+render();
+</script>
+</body>
+</html>

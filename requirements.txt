@@ -1,0 +1,7 @@
+streamlit>=1.52
+pandas
+openpyxl
+python-pptx
+altair
+sqlalchemy>=2.0
+psycopg2-binary
