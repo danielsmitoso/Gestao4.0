@@ -160,14 +160,26 @@ class Banco:
         return ultima
 
 
+def normalizar_url(url: str) -> str:
+    """Garante o driver psycopg2 (o do requirements.txt) no endereço do Postgres.
+
+    O SQLAlchemy 2.1 passou a usar o driver "psycopg" (versão 3) quando o
+    endereço é só "postgresql://" -- o que o Supabase fornece --, e o app
+    quebrava com "No module named 'psycopg'"."""
+    url = url.strip()
+    for prefixo in ("postgres://", "postgresql://"):
+        if url.startswith(prefixo):
+            return "postgresql+psycopg2://" + url[len(prefixo):]
+    return url
+
+
 def conectar(url: str | None) -> Banco:
     """url do Postgres (Supabase) ou None para o SQLite local.
     Use 'sqlite://' para um banco só em memória (modo demonstração)."""
     if url is None:
         SQLITE_LOCAL.parent.mkdir(parents=True, exist_ok=True)
         url = f"sqlite:///{SQLITE_LOCAL.as_posix()}"
-    if url.startswith("postgres://"):  # formato antigo que o SQLAlchemy não aceita
-        url = "postgresql://" + url[len("postgres://"):]
+    url = normalizar_url(url)
     if url.startswith("sqlite"):
         kwargs = {"connect_args": {"check_same_thread": False}}
         if url in ("sqlite://", "sqlite:///:memory:"):
