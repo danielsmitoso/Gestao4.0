@@ -82,16 +82,33 @@ localmente, veja o final do `PASSO_A_PASSO_PUBLICACAO.md`.
 
 ## Como o app lê a planilha
 
-- Uma aba por **frente**; a linha de cabeçalho tem **"Tarefa"** na coluna C.
-- Linha em **negrito com fundo colorido** = **entrega**; negrito sem fundo =
-  **subgrupo**; demais = **ações**.
-- Colunas: C Tarefa · D Responsável · E Status · F Peso · H Data
-  prevista/conclusão · I em diante comentários semanais (o último preenchido
-  vira "último comentário").
-- Linhas-modelo vazias ("AÇÕES", "TAREFA PRINCIPAL" sem responsável) são
-  ignoradas; aba só com o modelo aparece como "só com o modelo vazio".
-- As fórmulas da planilha **não** são usadas: % vem do status (0 / 50 / 100%) e
-  o avanço é recalculado como Σ(peso × %) ÷ Σ peso.
+**Modelo atual (rev.01, desde 21/10/2026)** — uma aba por **frente**:
+
+| Coluna (pelo nome do cabeçalho) | O que o app faz |
+|---|---|
+| **Título/Tarefa** | `Título` = **entrega** (linha-mãe) · `Tarefa` = **ação** |
+| **Tarefa** | nome da entrega ou da ação |
+| **Responsável** | um por linha (se houver mais de um, conta para cada um e aparece na aba Qualidade) |
+| **Status** | À iniciar / Em andamento / Concluído |
+| **Peso** | 1 a 3 (ação sem peso não entra no avanço, como na planilha) |
+| **%** | **vale o % digitado** (ex.: 80% em andamento); vazio = 0/50/100% pelo status; Concluído = sempre 100% |
+| **Prazo/Conclusão** | prazo da ação (ou data de conclusão, se concluída) |
+| colunas com datas (13/10/2026, 20/10/2026...) | comentário da semana; o último preenchido vira "último comentário" e todos ficam no histórico |
+
+- As colunas são encontradas **pelo nome do cabeçalho**, não pela posição: dá
+  para inserir ou mover colunas sem quebrar a leitura (renomear o cabeçalho, não).
+- Abas sem cabeçalho de tarefas (ex.: **Painel Indicadores**) são ignoradas;
+  aba só com o modelo ("TAREFA PRINCIPAL" / "AÇÕES" vazias) aparece como vazia.
+- Linha de tarefa sem nome é ignorada (com aviso, se tiver responsável/status).
+- As fórmulas de avanço da planilha **não** são usadas: o app recalcula
+  Σ(peso × %) ÷ Σ peso.
+- **Trava de segurança:** se mais de 30% das ações vierem com status fora da
+  lista, a prévia avisa que as colunas não foram reconhecidas e o botão
+  **Gravar** fica bloqueado.
+
+**Modelo antigo (até 19/10/2026)** continua aceito: sem a coluna Título/Tarefa,
+o tipo da linha vem da formatação (negrito com fundo = entrega, negrito sem fundo
+= subgrupo, demais = ação).
 
 ## Regras (em `modules/regras.py`)
 
@@ -114,8 +131,10 @@ topo de `regras.py`.
 - Três tabelas: **importacoes** (quem, quando, data de posição), **demandas**
   (identidade) e **situacoes** (a foto de cada demanda em cada importação).
 - **Identidade da demanda** = frente › entrega › ação (sem acento, minúsculo).
-  Mudar de subgrupo não cria demanda nova. Renomeou? A prévia sugere a
-  correspondência por semelhança de texto (≥ 75%) e a pessoa confirma.
+  Quando a chave não bate, a prévia sugere que é a mesma demanda e a pessoa
+  confirma: ↪️ mesma ação em outra entrega ou em outra aba (só se o par for
+  único) e ✏️ ação renomeada (todas as palavras do nome antigo estão no novo,
+  ex.: "Catalogar placas" → "Estoque - Catalogar placas", ou texto ≥ 85% igual).
 - Tudo que é histórico é **calculado** a partir das fotos (nada derivado é
   gravado): concluída na última importação, prazo original e quantas vezes
   mudou, data em que entrou, eventos. Por isso **desfazer** é só marcar a
@@ -161,7 +180,9 @@ com o exemplo e que o filtro de frente funciona; e a memória: comparação entr
 importações, renomeação aceita/recusada, demanda que sai e volta, desfazer,
 persistência em arquivo, modo demonstração isolado do banco do time e a senha.
 Usa só bancos temporários (nunca o do time). Se a planilha real estiver na
-pasta, também a lê. Termina com `15/15 testes passaram`.
+pasta (`Gestão 4.0 - NTec.xlsx` e `... - rev.01.xlsx`), também confere a
+leitura delas (127 ações no rev.01, igual ao Painel Indicadores) e a passagem
+de uma para a outra. Termina com `21/21 testes passaram`.
 
 ## Próximas fases
 

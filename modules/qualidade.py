@@ -6,6 +6,12 @@ import pandas as pd
 from modules import regras
 
 
+def _repetidas_entre_frentes(df: pd.DataFrame) -> pd.DataFrame:
+    nome = df["acao"].map(lambda a: " ".join(str(a).lower().split()))
+    frentes_por_nome = df.groupby(nome)["frente"].nunique()
+    return df[nome.map(frentes_por_nome) > 1]
+
+
 def checar(df: pd.DataFrame) -> list[dict]:
     """Lista de checagens com as ações afetadas. Recebe o df já classificado."""
     if df.empty:
@@ -26,6 +32,11 @@ def checar(df: pd.DataFrame) -> list[dict]:
          "Conta na carga de cada pessoa; o ideal é um dono e os demais como apoio."),
         ("Área de apoio como responsável", abertas[abertas["externo"]],
          "Facilities, Frotas, Unidade... indicam dependência externa: vale ter um dono interno que cobra."),
+        ("% não combina com o status", df[((df["status"] == "À iniciar") & (df["pct"] > 0))
+                                         | ((df["status"] != "Concluído") & (df["pct"] >= 1))],
+         "Ex.: \"À iniciar\" com % acima de 0, ou 100% sem estar \"Concluído\". O avanço usa o % digitado."),
+        ("Mesma ação em mais de uma frente", _repetidas_entre_frentes(df),
+         "Pode ser lançamento em duplicidade (a mesma tarefa contada duas vezes)."),
     ]
     return [{"checagem": nome, "qtd": len(itens), "dica": dica, "acoes": itens}
             for nome, itens, dica in checagens]

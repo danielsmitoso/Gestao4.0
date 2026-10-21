@@ -208,16 +208,31 @@ with st.expander("📥 Importar planilha atualizada", expanded=ultima is None):
         else:
             plano = hist.planejar(lida.acoes, dados_hist)
             if plano.renomeacoes:
-                st.markdown("**🔀 Parecem a mesma demanda com outro nome** — desmarque se for uma demanda diferente:")
+                st.markdown(f"**🔀 Parecem a mesma demanda ({len(plano.renomeacoes)})** — mudou de entrega ou de nome. "
+                            "Desmarque as que forem demandas diferentes:")
                 recusar = set()
                 for r in plano.renomeacoes:
-                    if not st.checkbox(f"“{r['de']}” → “{r['para']}”", value=True,
+                    icone = "↪️" if r.get("motivo") == "mudou de entrega" else "✏️"
+                    if not st.checkbox(f"{icone} “{r['de']}” → “{r['para']}”", value=True,
                                        key=f"ren_{n_upload}_{r['demanda_id']}"):
                         recusar.add(r["demanda_id"])
                 if recusar:
                     plano = hist.planejar(lida.acoes, dados_hist, recusar)
             plano.avisos = lida.avisos
             res = plano.resumo()
+            modelos = sorted(set(lida.modelos.values()))
+            st.caption(f"Planilha reconhecida: **{len(lida.acoes)} ações** em {len(lida.abas_lidas)} abas "
+                       f"({', '.join(lida.abas_lidas)}) · modelo {' / '.join(modelos)}"
+                       + (f" · abas sem tarefas, ignoradas: {', '.join(lida.abas_ignoradas + lida.abas_vazias)}"
+                          if lida.abas_ignoradas or lida.abas_vazias else ""))
+            # Trava de segurança: status quase todos fora da lista = colunas lidas no lugar errado
+            fora = (~lida.acoes["status"].isin(regras.ORDEM_STATUS)).mean()
+            leitura_suspeita = fora > 0.3
+            if leitura_suspeita:
+                st.error(f"⛔ {fora:.0%} das ações vieram com um status que não é À iniciar / Em andamento / "
+                         "Concluído. Isso indica que o app não reconheceu as colunas desta planilha. "
+                         "**Não grave** — confira se o cabeçalho tem as colunas Tarefa, Responsável, Status, "
+                         "Peso, % e Prazo, ou fale com quem mantém o app.")
             m = st.columns(5)
             m[0].metric("🆕 Novas", res["novas"] + res["voltaram"])
             m[1].metric("✏️ Atualizadas", res["atualizadas"])
@@ -246,7 +261,8 @@ with st.expander("📥 Importar planilha atualizada", expanded=ultima is None):
                            f"({ultima['data_posicao']:%d/%m/%Y}). Confira a data no topo antes de gravar.")
             if res["atualizadas"] + res["novas"] + res["voltaram"] + res["sairam"] == 0 and ultima is not None:
                 st.info("Nada mudou em relação à última importação.")
-            gravar = st.button("💾 Gravar importação", type="primary", disabled=not nome_usuario.strip(),
+            gravar = st.button("💾 Gravar importação", type="primary",
+                               disabled=not nome_usuario.strip() or leitura_suspeita,
                                help=None if nome_usuario.strip() else "Preencha seu nome acima.")
             if gravar:
                 try:

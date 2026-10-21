@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 from sqlalchemy import (Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, MetaData, String, Table, Text,
-                        create_engine, event, insert, select, text, update)
+                        create_engine, event, insert, inspect, select, text, update)
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import StaticPool
 
@@ -65,6 +65,7 @@ def _metadata(schema: str | None) -> tuple[MetaData, Table, Table, Table]:
         Column("responsavel", String(300)),
         Column("status", String(60)),
         Column("peso", Float),
+        Column("pct", Float),            # % da linha (digitado na planilha ou pelo status)
         Column("data", Date),
         Column("comentario", Text),
         Column("historico", Text),       # JSON [[semana, comentário], ...]
@@ -84,6 +85,17 @@ class Banco:
             if self.postgres:
                 con.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA_POSTGRES}"))
         self.md.create_all(engine)
+        self._migrar()
+
+    def _migrar(self) -> None:
+        """Acrescenta colunas criadas depois da primeira versão (o create_all não
+        altera tabela que já existe). Seguro rodar sempre."""
+        schema = SCHEMA_POSTGRES if self.postgres else None
+        existentes = {c["name"] for c in inspect(self.engine).get_columns("situacoes", schema=schema)}
+        tabela = f"{schema}.situacoes" if schema else "situacoes"
+        with self.engine.begin() as con:
+            if "pct" not in existentes:
+                con.execute(text(f"ALTER TABLE {tabela} ADD COLUMN pct FLOAT"))
 
     @property
     def descricao(self) -> str:
@@ -139,7 +151,8 @@ class Banco:
                 linhas_sit.append(dict(
                     importacao_id=imp_id, demanda_id=dem_id, frente=r.frente, entrega=r.entrega,
                     subgrupo=r.subgrupo, acao=r.acao, responsavel=r.responsavel, status=r.status,
-                    peso=None if pd.isna(r.peso) else float(r.peso), data=r.data, comentario=r.comentario,
+                    peso=None if pd.isna(r.peso) else float(r.peso),
+                    pct=None if pd.isna(r.pct) else float(r.pct), data=r.data, comentario=r.comentario,
                     historico=json.dumps(list(r.historico), ensure_ascii=False), nota=r.nota, aba=r.aba,
                     linha=int(r.linha)))
             if linhas_sit:
